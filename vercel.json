@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/webdo.admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/((?!assets/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
