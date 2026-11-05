@@ -178,14 +178,6 @@ export default function ProductModal() {
                             <code className="sku-number">{prod.sku || "N/A"}</code>
                           </td>
                         </tr>
-                        {prod.location && (
-                          <tr>
-                            <td className="spec-name">Ubicación en Almacén</td>
-                            <td className="spec-val">
-                              <span className="location-tag">{prod.location}</span>
-                            </td>
-                          </tr>
-                        )}
                         {Object.entries(prod.specs || {})
                           .filter(
                             ([k]) =>

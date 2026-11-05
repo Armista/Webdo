@@ -6,6 +6,7 @@ import GarageModal from "./components/GarageModal";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import ProductModal from "./components/ProductModal";
+import WhatsAppCaptchaModal from "./components/WhatsAppCaptchaModal";
 import { StoreProvider } from "./context/StoreContext";
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
       <ProductModal />
       <GarageModal />
       <AdminModals />
+      <WhatsAppCaptchaModal />
     </StoreProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { getWhatsAppUrl, scrollToCatalog, STORE_CONFIG } from "../config/store";
+import { openWhatsApp, scrollToCatalog, STORE_CONFIG } from "../config/store";
 import { useStore } from "../context/StoreContext";
 
 const FLOAT_WA_MSG = "Hola Webdo Autopartes, quiero cotizar un repuesto en Santo Domingo";
@@ -45,18 +45,17 @@ export default function Footer() {
         ))}
       </div>
 
-      {/* Botón Flotante de WhatsApp */}
-      <a
-        href={getWhatsAppUrl(FLOAT_WA_MSG)}
-        target="_blank"
-        rel="noopener noreferrer"
+      {/* Botón Flotante de WhatsApp (Protegido con CAPTCHA Anti-Spam) */}
+      <button
+        type="button"
+        onClick={() => openWhatsApp(FLOAT_WA_MSG)}
         className="floating-whatsapp-btn"
         aria-label="Contacto por WhatsApp"
         title="Habla con un asesor técnico por WhatsApp"
       >
         <i className="fa-brands fa-whatsapp" />
         <span className="floating-tooltip">¿Preguntas sobre una pieza? ¡Escríbenos!</span>
-      </a>
+      </button>
 
       {/* Footer */}
       <footer className="main-footer" id="contacto">
@@ -87,9 +86,11 @@ export default function Footer() {
                 <i className="fa-brands fa-youtube" />
               </a>
               <a
-                href={getWhatsAppUrl("Hola Webdo Autopartes")}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#whatsapp"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openWhatsApp("Hola Webdo Autopartes");
+                }}
                 aria-label="WhatsApp"
               >
                 <i className="fa-brands fa-whatsapp" />

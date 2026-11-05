@@ -92,19 +92,6 @@ function AdminLoginModal() {
               />
             </div>
 
-            <div className="admin-login-hint">
-              <small>
-                <i className="fa-solid fa-circle-info" /> Credenciales: Usuario:{" "}
-                <strong>{STORE_CONFIG.demoAdminUser}</strong> | Clave:{" "}
-                <strong>{STORE_CONFIG.demoAdminPass}</strong>
-                {isSupabaseEnabled && (
-                  <span style={{ display: "block", marginTop: "4px", color: "#34d399" }}>
-                    <i className="fa-solid fa-cloud" /> Conectado a Supabase Cloud en tiempo real
-                  </span>
-                )}
-              </small>
-            </div>
-
             {loginError && (
               <span
                 className="field-error-text"
@@ -383,7 +370,7 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
                 className="form-control-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filtrar por nombre, OEM, código SKU o ubicación en almacén..."
+                placeholder="Filtrar por nombre, OEM o código SKU..."
               />
               <select
                 className="form-control-sm custom-select-sm"
@@ -406,7 +393,6 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
                     <th>Imagen</th>
                     <th>Pieza / OEM</th>
                     <th>Código / SKU</th>
-                    <th>Ubicación Almacén</th>
                     <th>Categoría</th>
                     <th>Precio (RD$)</th>
                     <th>Estado</th>
@@ -417,7 +403,7 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
                   {products.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={7}
                         style={{
                           textAlign: "center",
                           padding: "45px 20px",
@@ -451,7 +437,7 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
                   ) : list.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={7}
                         style={{
                           textAlign: "center",
                           padding: "30px",
@@ -482,12 +468,6 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
                         <td>
                           <span className="sku-badge">
                             <i className="fa-solid fa-barcode" /> {prod.sku || "N/A"}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="location-tag">
-                            <i className="fa-solid fa-location-dot" />{" "}
-                            {prod.location || "Almacén Central"}
                           </span>
                         </td>
                         <td>
@@ -854,7 +834,6 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
   const [name, setName] = useState("");
   const [oem, setOem] = useState("");
   const [sku, setSku] = useState("");
-  const [location, setLocation] = useState("");
   const [category, setCategory] = useState("Motor");
   const [inStock, setInStock] = useState("true");
   const [price, setPrice] = useState("");
@@ -890,7 +869,6 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
       setSku(
         editingProd.sku || `WBD-${Math.floor(1000 + Math.random() * 9000)}`
       );
-      setLocation(editingProd.location || "Almacén Central");
       setCategory(editingProd.category || "Motor");
       setInStock(editingProd.inStock ? "true" : "false");
       setPrice(String(editingProd.price ?? ""));
@@ -904,7 +882,6 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
       setName("");
       setOem("");
       setSku(`WBD-${Math.floor(1000 + Math.random() * 9000)}`);
-      setLocation("Pasillo 1, Tramo A-01 (Almacén Central)");
       setCategory("Motor");
       setInStock("true");
       setPrice("");
@@ -971,14 +948,13 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
     const numOldPrice = oldPrice ? Number(oldPrice) : null;
     const cleanOem = oem.trim().toUpperCase();
     const cleanSku = sku.trim().toUpperCase();
-    const cleanLocation = location.trim() || "Almacén Central";
     const parsedCompat = parseCompatibility(compat, makes);
 
     const payload = {
       id: editingProd ? editingProd.id : `PROD-${Date.now().toString(36).toUpperCase()}`,
       name: name.trim(),
       sku: cleanSku,
-      location: cleanLocation,
+      location: "",
       oem: cleanOem,
       category,
       price: numPrice,
@@ -993,11 +969,9 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
         ? {
             ...editingProd.specs,
             "Código Interno / SKU": cleanSku,
-            "Ubicación en Almacén": cleanLocation,
           }
         : {
             "Código Interno / SKU": cleanSku,
-            "Ubicación en Almacén": cleanLocation,
             Condición: "100% Nuevo",
           },
       crossReferences: editingProd ? editingProd.crossReferences : [cleanOem],
@@ -1086,25 +1060,6 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
                     required
                   />
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="adminProdLocation">
-                  <i className="fa-solid fa-warehouse" /> Ubicación en Almacén / Tramo (Uso
-                  Administrativo)
-                </label>
-                <input
-                  type="text"
-                  id="adminProdLocation"
-                  className="form-control"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Ej: Pasillo 2, Tramo B-04 (Almacén Central)"
-                />
-                <small className="form-hint">
-                  Permite localizar la pieza física de inmediato al despachar o cotizar por
-                  WhatsApp.
-                </small>
               </div>
 
               <div className="form-row-2">

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   CATEGORIES,
   formatRD,
-  getWhatsAppUrl,
+  openWhatsApp,
   scrollToCatalog,
   STORE_CONFIG,
 } from "../config/store";
@@ -177,17 +177,16 @@ export default function Header() {
               </div>
             </button>
 
-            {/* Botón Directo WhatsApp Header */}
-            <a
-              href={getWhatsAppUrl(HEADER_WA_MSG)}
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* Botón Directo WhatsApp Header (Protegido con CAPTCHA Anti-Spam) */}
+            <button
+              type="button"
+              onClick={() => openWhatsApp(HEADER_WA_MSG)}
               className="header-whatsapp-btn"
               title="Escribir por WhatsApp"
             >
               <i className="fa-brands fa-whatsapp" />
               <span className="whatsapp-btn-text js-phone-display">{STORE_CONFIG.displayPhone}</span>
-            </a>
+            </button>
           </div>
         </div>
       </header>

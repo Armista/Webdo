@@ -47,9 +47,18 @@ export function getWhatsAppUrl(message = "") {
   return `https://wa.me/${STORE_CONFIG.whatsappPhone}${textParam}`;
 }
 
-/** Abre WhatsApp directamente en una nueva pestaña */
-export function openWhatsApp(message = "") {
+/** Abre WhatsApp directamente tras superar la verificación anti-bots */
+export function openWhatsAppDirect(message = "") {
   window.open(getWhatsAppUrl(message), "_blank", "noopener");
+}
+
+/** Solicita verificación CAPTCHA anti-spam antes de redirigir a WhatsApp */
+export function openWhatsApp(message = "") {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("webdo:request-whatsapp", { detail: { message } })
+    );
+  }
 }
 
 /** Formatea moneda en Pesos Dominicanos (RD$) */
