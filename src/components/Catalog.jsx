@@ -14,17 +14,17 @@ export default function Catalog() {
     setActiveVehicle,
     addToCart,
     setProductModalId,
+    isAdmin,
     openAdminPortal,
   } = useStore();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const getCategoryCount = (slug) => {
-    if (slug === "all") return products.length;
-    if (slug === "Ofertas RD$") {
-      return products.filter((p) => p.isOffer || (p.oldPrice && p.oldPrice > p.price)).length;
-    }
-    return products.filter((p) => p.category === slug).length;
+  const getTypeDisplayLabel = (slug) => {
+    if (slug === "all") return "TODAS";
+    if (slug === "Cuerpo/Enfriamiento") return "ENFRIAMIENTO";
+    if (slug === "Ofertas RD$") return "OFERTAS";
+    return slug.toUpperCase();
   };
 
   const handleResetAll = () => {
@@ -66,79 +66,81 @@ export default function Catalog() {
   return (
     <main className="catalog-section" id="catalogo">
       <div className="container catalog-layout">
-        {/* Sidebar de Filtros */}
+        {/* Overlay para cerrar filtros en móvil / iPad */}
+        <div
+          className={`sidebar-mobile-overlay ${mobileSidebarOpen ? "active" : ""}`}
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+
+        {/* Filtro Vertical Innovador (Tema Azul Webdo + Efecto Growing Fade-In Naranja) */}
         <aside
           className={`catalog-sidebar ${mobileSidebarOpen ? "mobile-open" : ""}`}
           id="catalogSidebar"
         >
-          <div className="sidebar-sticky-inner">
-            <div className="sidebar-header">
-              <h2 className="sidebar-title">
-                <i className="fa-solid fa-sliders" /> Filtros Técnicos
-              </h2>
-              <button type="button" className="btn-text-link" onClick={handleResetAll}>
-                Restablecer
+          <button
+            type="button"
+            className="sidebar-close-mobile"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-label="Cerrar filtros"
+          >
+            <i className="fa-solid fa-xmark" />
+          </button>
+
+          {/* Cabecera Innovadora "FILTROS" */}
+          <div className="sidebar-filter-crest">
+            <div className="sidebar-crest-pill">
+              <span className="crest-icon-box">
+                <i className="fa-solid fa-sliders" />
+              </span>
+              <span className="crest-title">FILTROS</span>
+            </div>
+            <span className="sidebar-crest-subtitle">TIPO DE REPUESTO</span>
+            <div className="sidebar-crest-divider">
+              <span className="divider-glow-dot" />
+            </div>
+          </div>
+
+          {/* Lista Vertical con Efecto Growing Fade-In Naranja */}
+          <nav className="sidebar-types-menu" aria-label="Filtros por tipo de repuesto">
+            {CATEGORIES.map((cat) => {
+              const isActive = filters.category === cat.slug;
+              return (
+                <button
+                  type="button"
+                  key={cat.slug}
+                  className={`sidebar-type-item ${isActive ? "active" : ""}`}
+                  onClick={() => {
+                    updateFilters({ category: cat.slug });
+                    setMobileSidebarOpen(false);
+                  }}
+                >
+                  <span className="sidebar-type-text">{getTypeDisplayLabel(cat.slug)}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Pie de Cápsula con Estado en Vivo y Botón de Reinicio */}
+          <div className="sidebar-filter-footer">
+            <div className="sidebar-live-status">
+              <span className="live-pulse-dot" />
+              <span>
+                <strong>{filteredProducts.length}</strong>{" "}
+                {filteredProducts.length === 1 ? "pieza" : "piezas"}
+              </span>
+            </div>
+            {(filters.category !== "all" || filters.stockOnly || activeVehicle) && (
+              <button
+                type="button"
+                className="sidebar-reset-btn"
+                onClick={() => {
+                  handleResetAll();
+                  setMobileSidebarOpen(false);
+                }}
+              >
+                <i className="fa-solid fa-rotate-left" /> Ver Todas
               </button>
-            </div>
-
-            {/* Filtro por Categoría */}
-            <div className="filter-group">
-              <h3 className="filter-group-title">Categoría</h3>
-              <div className="filter-options-list">
-                {CATEGORIES.map((cat) => (
-                  <label key={cat.slug} className="custom-checkbox-label">
-                    <input
-                      type="radio"
-                      name="sidebarCatRadio"
-                      checked={filters.category === cat.slug}
-                      onChange={() => updateFilters({ category: cat.slug })}
-                    />
-                    <span className="custom-checkbox" style={{ borderRadius: "50%" }} />
-                    <span className="checkbox-text">{cat.name}</span>
-                    <span className="filter-count-badge">{getCategoryCount(cat.slug)}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Filtro por Rango de Precio */}
-            <div className="filter-group">
-              <div className="filter-group-header-flex">
-                <h3 className="filter-group-title">Rango de Precio</h3>
-                <span className="price-slider-label">
-                  Hasta RD$ {filters.maxPrice.toLocaleString()}
-                </span>
-              </div>
-              <div className="price-slider-container">
-                <input
-                  type="range"
-                  min="500"
-                  max={MAX_PRICE}
-                  step="250"
-                  value={filters.maxPrice}
-                  onChange={(e) => updateFilters({ maxPrice: Number(e.target.value) })}
-                  className="price-slider"
-                />
-                <div className="price-slider-limits">
-                  <span>RD$ 500</span>
-                  <span>RD$ 25,000</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Disponibilidad */}
-            <div className="filter-group">
-              <h3 className="filter-group-title">Disponibilidad</h3>
-              <label className="custom-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={filters.stockOnly}
-                  onChange={(e) => updateFilters({ stockOnly: e.target.checked })}
-                />
-                <span className="custom-checkbox" />
-                <span className="checkbox-text">Solo en Stock</span>
-              </label>
-            </div>
+            )}
           </div>
         </aside>
 
@@ -151,7 +153,7 @@ export default function Catalog() {
                 className="mobile-filter-btn"
                 onClick={() => setMobileSidebarOpen((v) => !v)}
               >
-                <i className="fa-solid fa-filter" /> Filtros
+                <i className="fa-solid fa-filter" /> Categorías
               </button>
               <span className="results-counter">
                 Mostrando <strong>{filteredProducts.length}</strong> de{" "}
@@ -159,6 +161,18 @@ export default function Catalog() {
               </span>
             </div>
             <div className="toolbar-right">
+              <button
+                type="button"
+                className={`toolbar-stock-pill ${filters.stockOnly ? "active" : ""}`}
+                onClick={() => updateFilters({ stockOnly: !filters.stockOnly })}
+              >
+                <i
+                  className={`fa-solid ${
+                    filters.stockOnly ? "fa-circle-check" : "fa-boxes-stacked"
+                  }`}
+                />
+                <span>Solo en Stock</span>
+              </button>
               <label htmlFor="sortSelect" className="sort-label">
                 <i className="fa-solid fa-arrow-down-short-wide" /> Ordenar:
               </label>
@@ -190,7 +204,7 @@ export default function Catalog() {
 
           {/* Grid de Tarjetas */}
           {filteredProducts.length > 0 ? (
-            <div className="products-grid">
+            <div className="products-grid" key={filters.category}>
               {filteredProducts.map((prod) => {
                 const isCompatible = activeVehicle
                   ? checkVehicleMatch(prod, activeVehicle)
@@ -242,31 +256,25 @@ export default function Catalog() {
                       </h3>
 
                       <div className="product-compatibility-snippet">
-                        <i className="fa-solid fa-car" />
-                        <span>
-                          Compatibilidad: <strong>{compText || "Universal"}</strong>
+                        <span className="compat-pill-text">
+                          <i className="fa-solid fa-car" /> Compatibilidad:{" "}
+                          <strong>{compText || "Universal"}</strong>
                         </span>
                       </div>
 
                       <div className="product-card-footer">
                         <div className="price-container">
-                          <div>
+                          {prod.oldPrice && prod.oldPrice > prod.price && (
+                            <span className="old-price-strike">
+                              RD$ {prod.oldPrice.toLocaleString()}
+                            </span>
+                          )}
+                          <div className="main-price-line">
                             <span className="price-currency">RD$</span>
                             <span className="price-value">
                               {formatRD(prod.price).replace("RD$", "").trim()}
                             </span>
                           </div>
-                          {prod.oldPrice && (
-                            <small
-                              style={{
-                                textDecoration: "line-through",
-                                color: "var(--text-light-muted)",
-                                fontSize: "0.75rem",
-                              }}
-                            >
-                              RD$ {prod.oldPrice.toLocaleString()}
-                            </small>
-                          )}
                         </div>
 
                         <div className="card-action-buttons">
@@ -276,7 +284,8 @@ export default function Catalog() {
                             onClick={() => setProductModalId(prod.id)}
                             title="Ver detalles técnicos del repuesto"
                           >
-                            <i className="fa-regular fa-eye" /> Detalle
+                            <i className="fa-regular fa-eye" />
+                            <span>Detalle</span>
                           </button>
                           <button
                             type="button"
@@ -284,7 +293,8 @@ export default function Catalog() {
                             onClick={() => openWhatsApp(buildQuoteMessage(prod, activeVehicle))}
                             title="Cotizar por WhatsApp con Código de Almacén"
                           >
-                            <i className="fa-brands fa-whatsapp" /> Cotizar
+                            <i className="fa-brands fa-whatsapp" />
+                            <span>Cotizar</span>
                           </button>
                           <button
                             type="button"
@@ -292,7 +302,7 @@ export default function Catalog() {
                             onClick={() => addToCart(prod.id, 1)}
                             title="Agregar al carrito"
                           >
-                            <i className="fa-solid fa-cart-plus" />
+                            <i className="fa-solid fa-cart-shopping" />
                           </button>
                         </div>
                       </div>
@@ -309,16 +319,18 @@ export default function Catalog() {
                   <div className="empty-icon">
                     <i className="fa-solid fa-box-open" />
                   </div>
-                  <h3>Catálogo Listo para Demostración</h3>
+                  <h3>Catálogo en Actualización</h3>
                   <p>
-                    Actualmente no hay repuestos registrados en el sistema. Puedes agregar
-                    productos en tiempo real desde el <strong>Panel de Administrador</strong>.
+                    Actualmente estamos actualizando el inventario de repuestos. Si buscas una pieza
+                    específica, escríbenos directamente por WhatsApp para cotización inmediata.
                   </p>
-                  <div className="empty-state-actions">
-                    <button type="button" className="btn btn-primary" onClick={openAdminPortal}>
-                      <i className="fa-solid fa-user-shield" /> Abrir Panel de Administrador
-                    </button>
-                  </div>
+                  {isAdmin && (
+                    <div className="empty-state-actions">
+                      <button type="button" className="btn btn-primary" onClick={openAdminPortal}>
+                        <i className="fa-solid fa-sliders" /> Abrir Panel de Administrador
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>

@@ -23,6 +23,7 @@ export default function Header() {
     setGarageOpen,
     mobileMenuOpen,
     setMobileMenuOpen,
+    isAdmin,
     openAdminPortal,
   } = useStore();
 
@@ -76,16 +77,18 @@ export default function Header() {
               <span>Envíos a todo Santo Domingo y el interior del país</span>
             </span>
           </div>
-          <div className="topbar-right">
-            <button
-              type="button"
-              className="topbar-admin-btn"
-              onClick={openAdminPortal}
-              title="Acceso de Administrador"
-            >
-              <i className="fa-solid fa-lock" /> <span>Admin</span>
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="topbar-right">
+              <button
+                type="button"
+                className="topbar-admin-btn"
+                onClick={openAdminPortal}
+                title="Volver al Panel de Control"
+              >
+                <i className="fa-solid fa-sliders" /> <span>Panel Admin</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -187,28 +190,6 @@ export default function Header() {
             </a>
           </div>
         </div>
-
-        {/* Mega Menú de Categorías */}
-        <nav className="categories-nav" id="categoriesNav">
-          <div className="container nav-container">
-            <ul className="categories-list" id="categoryMenu">
-              {CATEGORIES.map((cat) => (
-                <li key={cat.slug} className="nav-item">
-                  <button
-                    type="button"
-                    className={`nav-btn ${cat.slug === "Ofertas RD$" ? "highlight-offer" : ""} ${
-                      filters.category === cat.slug ? "active" : ""
-                    }`}
-                    onClick={() => handleSelectCategory(cat.slug)}
-                  >
-                    <i className={`fa-solid ${cat.icon}`} />{" "}
-                    {cat.slug === "Cuerpo/Enfriamiento" ? "Cuerpo / Enfriamiento" : cat.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </nav>
       </header>
 
       {/* Mobile Drawer Menú */}

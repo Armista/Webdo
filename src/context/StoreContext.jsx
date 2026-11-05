@@ -33,6 +33,31 @@ function friendlyError(err, fallback) {
   return fallback;
 }
 
+/** Detecta si la URL actual solicita acceso al portal de administrador (ej: /webdo.admin o #webdo.admin) */
+function isAdminRoute() {
+  if (typeof window === "undefined") return false;
+  const path = (window.location.pathname || "").toLowerCase().replace(/\/+$/, "");
+  const hash = (window.location.hash || "").toLowerCase();
+  const search = (window.location.search || "").toLowerCase();
+  return (
+    path.endsWith("/webdo.admin") ||
+    path.endsWith("/admin") ||
+    hash === "#webdo.admin" ||
+    hash === "#/webdo.admin" ||
+    hash === "#admin" ||
+    hash === "#/admin" ||
+    search.includes("webdo.admin") ||
+    search === "?admin"
+  );
+}
+
+function clearAdminRouteFromUrl() {
+  if (typeof window === "undefined") return;
+  if (isAdminRoute()) {
+    window.history.replaceState(null, "", "/");
+  }
+}
+
 export function StoreProvider({ children }) {
   /* ---------------- Datos del catálogo ---------------- */
   const [products, setProducts] = useState([]);
@@ -82,13 +107,40 @@ export function StoreProvider({ children }) {
       }
     })();
 
-    db.hasSession().then((ok) => !cancelled && setIsAdmin(ok));
+    db.hasSession().then((ok) => {
+      if (cancelled) return;
+      setIsAdmin(ok);
+      if (isAdminRoute()) {
+        if (ok) setAdminPanelOpen(true);
+        else setAdminLoginOpen(true);
+      }
+    });
     const unsubscribe = db.onAuthChange((ok) => setIsAdmin(ok));
     return () => {
       cancelled = true;
       unsubscribe();
     };
   }, [showToast]);
+
+  /* ---------------- Detección de enlace /webdo.admin o #webdo.admin ---------------- */
+  useEffect(() => {
+    const checkRoute = () => {
+      if (isAdminRoute()) {
+        if (isAdmin) {
+          setAdminLoginOpen(false);
+          setAdminPanelOpen(true);
+        } else {
+          setAdminLoginOpen(true);
+        }
+      }
+    };
+    window.addEventListener("hashchange", checkRoute);
+    window.addEventListener("popstate", checkRoute);
+    return () => {
+      window.removeEventListener("hashchange", checkRoute);
+      window.removeEventListener("popstate", checkRoute);
+    };
+  }, [isAdmin]);
 
   /* ---------------- Persistencia local del cliente ---------------- */
   useEffect(() => localStorage.setItem("webdo_cart", JSON.stringify(cart)), [cart]);
@@ -161,6 +213,16 @@ export function StoreProvider({ children }) {
     else setAdminLoginOpen(true);
   }, [isAdmin]);
 
+  const closeAdminLogin = useCallback(() => {
+    setAdminLoginOpen(false);
+    clearAdminRouteFromUrl();
+  }, []);
+
+  const closeAdminPanel = useCallback(() => {
+    setAdminPanelOpen(false);
+    clearAdminRouteFromUrl();
+  }, []);
+
   const login = useCallback(
     async (user, pass) => {
       const { ok, error } = await db.signIn(user, pass);
@@ -182,6 +244,7 @@ export function StoreProvider({ children }) {
     setIsAdmin(false);
     setAdminPanelOpen(false);
     setProductForm(null);
+    clearAdminRouteFromUrl();
     showToast("Sesión de administrador cerrada", "info");
   }, [showToast]);
 
@@ -360,8 +423,10 @@ export function StoreProvider({ children }) {
     setMobileMenuOpen,
     adminLoginOpen,
     setAdminLoginOpen,
+    closeAdminLogin,
     adminPanelOpen,
     setAdminPanelOpen,
+    closeAdminPanel,
     productForm,
     setProductForm,
     toasts,

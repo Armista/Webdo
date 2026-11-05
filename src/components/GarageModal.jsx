@@ -128,9 +128,7 @@ export default function GarageModal() {
                   disabled={!year}
                 >
                   <option value="">
-                    {makes.length === 0
-                      ? "(Sin marcas registradas - Añadir en Admin)"
-                      : "Selecciona Marca..."}
+                    {makes.length === 0 ? "Sin marcas registradas..." : "Selecciona Marca..."}
                   </option>
                   {makes.map((m) => (
                     <option key={m} value={m}>

@@ -8,7 +8,7 @@ import { formatCompatibility, parseCompatibility } from "../utils/products";
    1. MODAL DE LOGIN DE ADMINISTRADOR
    ========================================================================== */
 function AdminLoginModal() {
-  const { adminLoginOpen, setAdminLoginOpen, login } = useStore();
+  const { adminLoginOpen, closeAdminLogin, login } = useStore();
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [loginError, setLoginError] = useState(false);
@@ -18,7 +18,7 @@ function AdminLoginModal() {
 
   const handleClose = () => {
     setLoginError(false);
-    setAdminLoginOpen(false);
+    closeAdminLogin();
   };
 
   const handleSubmit = async (e) => {
@@ -139,7 +139,7 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
     vehicles,
     gallery,
     adminPanelOpen,
-    setAdminPanelOpen,
+    closeAdminPanel,
     setProductForm,
     logout,
     removeProduct,
@@ -169,7 +169,7 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
 
   if (!adminPanelOpen) return null;
 
-  const handleClose = () => setAdminPanelOpen(false);
+  const handleClose = () => closeAdminPanel();
 
   /* --- Métricas del Inventario --- */
   const totalProducts = products.length;
@@ -862,23 +862,29 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
   const [compat, setCompat] = useState("");
   const [desc, setDesc] = useState("");
   const [image, setImage] = useState("");
+  const [imageTab, setImageTab] = useState("upload"); // "upload" | "gallery" | "url"
+  const [customUrl, setCustomUrl] = useState("");
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const [uploadingImg, setUploadingImg] = useState(false);
 
   // Asistente de compatibilidad
   const [pickerMake, setPickerMake] = useState("");
   const [pickerModel, setPickerModel] = useState("");
   const [pickerYears, setPickerYears] = useState("2010-2024");
-  const [miniGalleryOpen, setMiniGalleryOpen] = useState(false);
 
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!productForm) return;
-    setMiniGalleryOpen(false);
+    setImageTab("upload");
+    setUploadedFileName("");
+    setUploadingImg(false);
     setPickerMake("");
     setPickerModel("");
     setPickerYears("2010-2024");
 
     if (editingProd) {
+      const existingImg = editingProd.images?.[0] || "";
       setName(editingProd.name || "");
       setOem(editingProd.oem || "");
       setSku(
@@ -891,8 +897,10 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
       setOldPrice(editingProd.oldPrice ? String(editingProd.oldPrice) : "");
       setCompat(formatCompatibility(editingProd.compatibility || []));
       setDesc(editingProd.shortDesc || editingProd.description || "");
-      setImage(editingProd.images?.[0] || "");
+      setImage(existingImg);
+      setCustomUrl(existingImg.startsWith("http") ? existingImg : "");
     } else {
+      const initImg = productForm.initialImage || "";
       setName("");
       setOem("");
       setSku(`WBD-${Math.floor(1000 + Math.random() * 9000)}`);
@@ -903,13 +911,15 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
       setOldPrice("");
       setCompat("");
       setDesc("");
-      setImage(productForm.initialImage || "");
+      setImage(initImg);
+      setCustomUrl(initImg.startsWith("http") ? initImg : "");
     }
   }, [productForm, editingProd]);
 
   useEffect(() => {
     if (externalImage) {
       setImage(externalImage);
+      setUploadedFileName("Seleccionada de la galería");
       clearExternalImage();
     }
   }, [externalImage, clearExternalImage]);
@@ -935,13 +945,19 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    showToast("Procesando imagen...", "info");
-    const created = await uploadToGallery([file]);
-    if (created[0]) {
-      setImage(created[0].dataUrl);
-      showToast("¡Imagen cargada y guardada en galería!", "success");
+    setUploadingImg(true);
+    showToast("Subiendo y optimizando imagen...", "info");
+    try {
+      const created = await uploadToGallery([file]);
+      if (created[0]) {
+        setImage(created[0].dataUrl);
+        setUploadedFileName(file.name);
+        showToast("¡Imagen cargada y lista!", "success");
+      }
+    } finally {
+      setUploadingImg(false);
+      e.target.value = "";
     }
-    e.target.value = "";
   };
 
   const handleSubmit = async (e) => {
@@ -1246,95 +1262,197 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
               </div>
             </div>
 
-            {/* Columna Derecha: Sistema Dual de Imagen y Galería */}
+            {/* Columna Derecha: Sistema de Imagen y Vista Previa */}
             <div className="admin-form-col">
               <div className="form-group">
                 <label className="d-flex justify-content-between align-items-center">
                   <span>
-                    Imagen Principal <span className="required-star">*</span>
+                    Imagen Principal del Repuesto <span className="required-star">*</span>
                   </span>
+                  {image && (
+                    <span className="image-ready-badge">
+                      <i className="fa-solid fa-circle-check" /> Imagen lista
+                    </span>
+                  )}
                 </label>
 
-                <div className="image-input-methods">
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary btn-sm w-100 mb-2"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <i className="fa-solid fa-cloud-arrow-up" /> 1. Subir Imagen desde mi PC /
-                    Dispositivo
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: "none" }}
-                    onChange={handleFileUpload}
-                  />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleFileUpload}
+                />
 
-                  <div className="input-divider-text">
-                    <span>O por enlace web:</span>
+                {/* Vista Previa Interactiva Arriba */}
+                <div className="image-preview-wrapper">
+                  <div
+                    className={`image-preview-box ${image ? "has-image" : "empty-clickable"}`}
+                    onClick={() => !image && fileInputRef.current?.click()}
+                  >
+                    {!image ? (
+                      <div className="preview-placeholder">
+                        <div className="preview-icon-circle">
+                          <i className="fa-solid fa-cloud-arrow-up" />
+                        </div>
+                        <strong>Sin imagen seleccionada</strong>
+                        <span>
+                          Haz clic aquí para subir una foto desde tu dispositivo o elige una opción
+                          debajo
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <img src={image} alt="Vista Previa" />
+                        <div className="preview-overlay-actions">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <i className="fa-solid fa-camera-rotate" /> Cambiar Foto
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-light"
+                            onClick={() => {
+                              setImage("");
+                              setCustomUrl("");
+                              setUploadedFileName("");
+                            }}
+                          >
+                            <i className="fa-solid fa-trash-can" /> Quitar
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
+                </div>
 
-                  <input
-                    type="url"
-                    className="form-control"
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="https://images.unsplash.com/..."
-                    required
-                  />
-
+                {/* Pestañas Limpias de Origen de Imagen */}
+                <div className="image-source-tabs">
                   <button
                     type="button"
-                    className="btn btn-outline-light btn-sm w-100 mt-2"
-                    onClick={() => setMiniGalleryOpen((v) => !v)}
+                    className={`image-source-tab ${imageTab === "upload" ? "active" : ""}`}
+                    onClick={() => setImageTab("upload")}
                   >
-                    <i className="fa-solid fa-images" /> 2. Seleccionar de la Galería Guardada
+                    <i className="fa-solid fa-upload" /> Subir Archivo
+                  </button>
+                  <button
+                    type="button"
+                    className={`image-source-tab ${imageTab === "gallery" ? "active" : ""}`}
+                    onClick={() => setImageTab("gallery")}
+                  >
+                    <i className="fa-solid fa-images" /> Galería ({gallery.length})
+                  </button>
+                  <button
+                    type="button"
+                    className={`image-source-tab ${imageTab === "url" ? "active" : ""}`}
+                    onClick={() => setImageTab("url")}
+                  >
+                    <i className="fa-solid fa-link" /> Enlace Web
                   </button>
                 </div>
 
-                {miniGalleryOpen && (
+                {/* Panel 1: Subir desde PC / Celular */}
+                {imageTab === "upload" && (
+                  <div className="image-input-methods">
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary w-100"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImg}
+                    >
+                      <i className="fa-solid fa-cloud-arrow-up" />{" "}
+                      {uploadingImg
+                        ? "Subiendo imagen..."
+                        : "Seleccionar Foto desde PC / Celular"}
+                    </button>
+                    {uploadedFileName && (
+                      <div className="uploaded-file-pill">
+                        <i className="fa-solid fa-file-image" />
+                        <span>{uploadedFileName}</span>
+                      </div>
+                    )}
+                    <small className="form-hint" style={{ textAlign: "center", display: "block" }}>
+                      Formatos aceptados: JPG, PNG, WEBP. La foto se guarda automáticamente en tu
+                      galería.
+                    </small>
+                  </div>
+                )}
+
+                {/* Panel 2: Elegir de la Galería Guardada */}
+                {imageTab === "gallery" && (
                   <div className="admin-mini-gallery-picker">
-                    <div className="mini-gallery-title">Elige una imagen de la galería:</div>
+                    <div className="mini-gallery-title">
+                      Haz clic en una foto para asignarla al repuesto:
+                    </div>
                     <div className="mini-gallery-grid">
                       {gallery.length === 0 ? (
-                        <small style={{ gridColumn: "1/-1", color: "var(--text-muted)" }}>
-                          No hay imágenes guardadas en la galería.
-                        </small>
+                        <div className="mini-gallery-empty">
+                          <i className="fa-regular fa-images" />
+                          <span>No hay imágenes guardadas en la galería todavía.</span>
+                        </div>
                       ) : (
-                        gallery.map((img) => (
-                          <img
-                            key={img.id}
-                            src={img.dataUrl}
-                            alt={img.name}
-                            className="mini-gallery-thumb"
-                            title={`Click para usar: ${img.name}`}
-                            onClick={() => {
-                              setImage(img.dataUrl);
-                              setMiniGalleryOpen(false);
-                              showToast("Imagen asignada al repuesto", "success");
-                            }}
-                          />
-                        ))
+                        gallery.map((img) => {
+                          const isSelected = image === img.dataUrl;
+                          return (
+                            <button
+                              type="button"
+                              key={img.id}
+                              className={`mini-gallery-item ${isSelected ? "selected" : ""}`}
+                              title={img.name}
+                              onClick={() => {
+                                setImage(img.dataUrl);
+                                setUploadedFileName(img.name || "Imagen de galería");
+                                showToast("Imagen seleccionada de la galería", "success");
+                              }}
+                            >
+                              <img
+                                src={img.dataUrl}
+                                alt={img.name}
+                                className="mini-gallery-thumb"
+                              />
+                              {isSelected && (
+                                <span className="mini-gallery-check">
+                                  <i className="fa-solid fa-check" />
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
                       )}
                     </div>
                   </div>
                 )}
 
-                <div className="image-preview-wrapper mt-3">
-                  <label className="preview-title">Vista Previa de la Imagen:</label>
-                  <div className="image-preview-box">
-                    {!image ? (
-                      <div className="preview-placeholder">
-                        <i className="fa-regular fa-image" />
-                        <span>Sin imagen seleccionada</span>
-                      </div>
-                    ) : (
-                      <img src={image} alt="Vista Previa" style={{ display: "block" }} />
-                    )}
+                {/* Panel 3: Pegar Enlace Web (URL) */}
+                {imageTab === "url" && (
+                  <div className="image-input-methods">
+                    <label
+                      htmlFor="adminProdImgUrl"
+                      style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}
+                    >
+                      Pega la dirección web (URL) de la imagen:
+                    </label>
+                    <input
+                      type="text"
+                      id="adminProdImgUrl"
+                      className="form-control"
+                      value={customUrl}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomUrl(val);
+                        setImage(val.trim());
+                        setUploadedFileName("");
+                      }}
+                      placeholder="https://ejemplo.com/foto-repuesto.jpg"
+                    />
+                    <small className="form-hint" style={{ textAlign: "center", display: "block" }}>
+                      La vista previa superior mostrará la imagen automáticamente al pegar el enlace.
+                    </small>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

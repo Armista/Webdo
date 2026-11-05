@@ -13,7 +13,7 @@ const FOOTER_CATEGORIES = [
 ];
 
 export default function Footer() {
-  const { updateFilters, openAdminPortal, toasts } = useStore();
+  const { updateFilters, toasts } = useStore();
 
   const handleCatClick = (e, slug) => {
     e.preventDefault();
@@ -188,9 +188,6 @@ export default function Footer() {
               &copy; 2026 <strong>Webdo Autopartes SRL</strong>. RNC 131-98745-2. Todos los derechos
               reservados. Santo Domingo, República Dominicana.
             </p>
-            <button type="button" className="footer-admin-btn" onClick={openAdminPortal}>
-              <i className="fa-solid fa-user-shield" /> Portal de Administrador
-            </button>
           </div>
         </div>
       </footer>
