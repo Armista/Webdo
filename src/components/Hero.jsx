@@ -45,9 +45,6 @@ export default function Hero() {
         <div className="hero-overlay" />
         <div className="container hero-container">
           <div className="hero-content">
-            <div className="hero-pill">
-              <i className="fa-solid fa-bolt" /> LÍDERES EN AUTOPARTES EN REPÚBLICA DOMINICANA
-            </div>
             <h1 className="hero-title">Encuentra la pieza exacta para tu vehículo</h1>
             <p className="hero-subtitle">
               Catálogo técnico especializado con números de parte originales, compatibilidad
