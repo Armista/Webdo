@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { openWhatsAppDirect } from "../config/store";
+import { openWhatsAppDirect, registerWhatsAppHandler } from "../config/store";
 
 const CAPTCHA_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
@@ -89,6 +89,17 @@ export default function WhatsAppCaptchaModal() {
     }
   }, []);
 
+  const openCaptchaWithMsg = useCallback((msg = "") => {
+    setPendingMessage(msg);
+    setNotRobot(false);
+    setBotTrap("");
+    const newCode = generateCaptchaCode(5);
+    setCaptchaCode(newCode);
+    setUserInput("");
+    setErrorMsg("");
+    setOpen(true);
+  }, []);
+
   const refreshCaptcha = useCallback(() => {
     const newCode = generateCaptchaCode(5);
     setCaptchaCode(newCode);
@@ -97,21 +108,40 @@ export default function WhatsAppCaptchaModal() {
   }, []);
 
   useEffect(() => {
-    const handleRequestWhatsApp = (e) => {
-      const msg = e.detail?.message ?? "";
-      setPendingMessage(msg);
-      setNotRobot(false);
-      setBotTrap("");
-      const newCode = generateCaptchaCode(5);
-      setCaptchaCode(newCode);
-      setUserInput("");
-      setErrorMsg("");
-      setOpen(true);
-    };
+    // 1. Registrar manejador directo en store.js
+    const unregister = registerWhatsAppHandler((msg) => {
+      openCaptchaWithMsg(msg);
+    });
 
+    // 2. Escuchar evento global window
+    const handleRequestWhatsApp = (e) => {
+      openCaptchaWithMsg(e.detail?.message ?? "");
+    };
     window.addEventListener("webdo:request-whatsapp", handleRequestWhatsApp);
-    return () => window.removeEventListener("webdo:request-whatsapp", handleRequestWhatsApp);
-  }, []);
+
+    // 3. Interceptar cualquier clic en enlaces directos a wa.me o botones flotantes
+    const handleGlobalClick = (e) => {
+      const anchor = e.target.closest?.('a[href*="wa.me"], a[href*="whatsapp.com"]');
+      if (anchor) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          const url = new URL(anchor.href);
+          const text = url.searchParams.get("text") || "Hola Webdo Autopartes";
+          openCaptchaWithMsg(text);
+        } catch {
+          openCaptchaWithMsg("Hola Webdo Autopartes");
+        }
+      }
+    };
+    document.addEventListener("click", handleGlobalClick, true);
+
+    return () => {
+      unregister();
+      window.removeEventListener("webdo:request-whatsapp", handleRequestWhatsApp);
+      document.removeEventListener("click", handleGlobalClick, true);
+    };
+  }, [openCaptchaWithMsg]);
 
   useEffect(() => {
     if (open && captchaCode) {
@@ -129,7 +159,6 @@ export default function WhatsAppCaptchaModal() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Si el campo honeypot oculto fue rellenado por un bot, bloquear
     if (botTrap.trim() !== "") {
       return;
     }
@@ -145,7 +174,6 @@ export default function WhatsAppCaptchaModal() {
       return;
     }
 
-    // Verificación superada: abrir WhatsApp y cerrar modal
     const msgToSend = pendingMessage;
     setOpen(false);
     openWhatsAppDirect(msgToSend);
@@ -172,10 +200,9 @@ export default function WhatsAppCaptchaModal() {
             <div className="captcha-shield-icon">
               <i className="fa-solid fa-shield-halved" />
             </div>
-            <h3>Verificación Anti-Spam</h3>
+            <h3>Verificación de Seguridad</h3>
             <p>
-              Por seguridad y para evitar bots automáticos, completa esta breve verificación antes
-              de abrir <strong>WhatsApp</strong>.
+              Confirma que no eres un robot para continuar al chat de <strong>WhatsApp</strong>.
             </p>
           </div>
 
@@ -204,8 +231,8 @@ export default function WhatsAppCaptchaModal() {
               <span className="robot-checkbox-indicator">
                 {notRobot && <i className="fa-solid fa-check" />}
               </span>
-              <span className="robot-checkbox-text">Confirmo que soy una persona real</span>
-              <i className="fa-solid fa-user-check robot-badge-icon" />
+              <span className="robot-checkbox-text">No soy un robot</span>
+              <i className="fa-solid fa-shield-halved robot-badge-icon" />
             </button>
 
             {/* Imagen Canvas con Código Distorsionado */}
@@ -267,7 +294,7 @@ export default function WhatsAppCaptchaModal() {
                 Cancelar
               </button>
               <button type="submit" className="btn btn-whatsapp captcha-submit-btn">
-                <i className="fa-brands fa-whatsapp" /> Continuar a WhatsApp
+                <i className="fa-brands fa-whatsapp" /> Ir a WhatsApp
               </button>
             </div>
           </form>

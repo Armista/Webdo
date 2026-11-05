@@ -1,5 +1,6 @@
 import { openWhatsApp, scrollToCatalog, STORE_CONFIG } from "../config/store";
 import { useStore } from "../context/StoreContext";
+import WhatsAppCaptchaModal from "./WhatsAppCaptchaModal";
 
 const FLOAT_WA_MSG = "Hola Webdo Autopartes, quiero cotizar un repuesto en Santo Domingo";
 
@@ -48,7 +49,11 @@ export default function Footer() {
       {/* Botón Flotante de WhatsApp (Protegido con CAPTCHA Anti-Spam) */}
       <button
         type="button"
-        onClick={() => openWhatsApp(FLOAT_WA_MSG)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openWhatsApp(FLOAT_WA_MSG);
+        }}
         className="floating-whatsapp-btn"
         aria-label="Contacto por WhatsApp"
         title="Habla con un asesor técnico por WhatsApp"
@@ -56,6 +61,9 @@ export default function Footer() {
         <i className="fa-brands fa-whatsapp" />
         <span className="floating-tooltip">¿Preguntas sobre una pieza? ¡Escríbenos!</span>
       </button>
+
+      {/* Modal de Verificación CAPTCHA para todos los botones de WhatsApp */}
+      <WhatsAppCaptchaModal />
 
       {/* Footer */}
       <footer className="main-footer" id="contacto">

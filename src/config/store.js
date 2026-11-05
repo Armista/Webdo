@@ -41,10 +41,21 @@ export const MAX_PRICE = 25000;
 const currentYear = new Date().getFullYear();
 export const YEARS = Array.from({ length: currentYear + 2 - 2000 }, (_, i) => String(currentYear + 1 - i));
 
-/** Genera cualquier enlace de WhatsApp utilizando el número centralizado */
+let whatsAppCaptchaHandler = null;
+
+export function registerWhatsAppHandler(fn) {
+  whatsAppCaptchaHandler = fn;
+  return () => {
+    if (whatsAppCaptchaHandler === fn) {
+      whatsAppCaptchaHandler = null;
+    }
+  };
+}
+
+/** Genera cualquier enlace de WhatsApp utilizando el número centralizado (api.whatsapp.com preserva emojis UTF-8 sin corrupción) */
 export function getWhatsAppUrl(message = "") {
-  const textParam = message ? `?text=${encodeURIComponent(message)}` : "";
-  return `https://wa.me/${STORE_CONFIG.whatsappPhone}${textParam}`;
+  const textParam = message ? `&text=${encodeURIComponent(message)}` : "";
+  return `https://api.whatsapp.com/send?phone=${STORE_CONFIG.whatsappPhone}${textParam}`;
 }
 
 /** Abre WhatsApp directamente tras superar la verificación anti-bots */
@@ -54,6 +65,10 @@ export function openWhatsAppDirect(message = "") {
 
 /** Solicita verificación CAPTCHA anti-spam antes de redirigir a WhatsApp */
 export function openWhatsApp(message = "") {
+  if (typeof whatsAppCaptchaHandler === "function") {
+    whatsAppCaptchaHandler(message);
+    return;
+  }
   if (typeof window !== "undefined") {
     window.dispatchEvent(
       new CustomEvent("webdo:request-whatsapp", { detail: { message } })

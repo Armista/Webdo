@@ -119,14 +119,16 @@ export function formatCompatibility(compatibility = []) {
    ========================================================================== */
 export function buildQuoteMessage(prod, vehicle) {
   const skuCode = prod.sku || (prod.oem ? `OEM-${prod.oem}` : "REP-WEBDO");
-  const vehDesc = vehicle ? `\n🚗 *Vehículo:* ${vehicle.make} ${vehicle.model} (${vehicle.year})` : "";
+  const vehDesc = vehicle
+    ? `\n*Vehículo:* ${vehicle.make} ${vehicle.model} (${vehicle.year})`
+    : "";
   return (
-    `*COTIZACIÓN DE REPUESTO - WEBDO RD* 🏎️💨\n` +
+    `*COTIZACIÓN DE REPUESTO - WEBDO RD* \u{1F697}\u{1F527}\n` +
     `------------------------------------\n` +
-    `📦 *Pieza:* ${prod.name}\n` +
-    `🔢 *Código Interno / SKU:* ${skuCode}\n` +
-    `⚙️ *OEM:* ${prod.oem}\n` +
-    `💰 *Precio:* ${formatRD(prod.price)}` +
+    `*Pieza:* ${prod.name}\n` +
+    `*Código Interno / SKU:* ${skuCode}\n` +
+    `*OEM:* ${prod.oem}\n` +
+    `*Precio:* ${formatRD(prod.price)}` +
     vehDesc +
     `\n------------------------------------\n` +
     `Hola Webdo Autopartes, me interesa este repuesto con código *${skuCode}*. ¿Tienen disponibilidad en almacén para entrega o retiro?`
@@ -135,29 +137,29 @@ export function buildQuoteMessage(prod, vehicle) {
 
 export function buildOrderMessage({ name, deliveryOption, location, vehicle, cart }) {
   const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
-  let msg = `*NUEVO PEDIDO DE AUTOPARTES - WEBDO RD* 🏎️💨\n`;
+  let msg = `*NUEVO PEDIDO DE AUTOPARTES - WEBDO RD* \u{1F697}\u{1F527}\n`;
   msg += `------------------------------------\n`;
-  msg += `👤 *Cliente:* ${name}\n`;
+  msg += `*Cliente:* ${name}\n`;
   if (deliveryOption === "delivery") {
-    msg += `📦 *Método de Entrega:* Envío a Domicilio / Taller\n`;
-    msg += `📍 *Ubicación / Sector:* ${location}\n`;
+    msg += `*Método de Entrega:* Envío a Domicilio / Taller\n`;
+    msg += `*Ubicación / Sector:* ${location}\n`;
   } else {
-    msg += `📦 *Método de Entrega:* Retiro en tienda física (${STORE_CONFIG.shortAddress})\n`;
+    msg += `*Método de Entrega:* Retiro en tienda física (${STORE_CONFIG.shortAddress})\n`;
   }
   if (vehicle) {
-    msg += `🚗 *Vehículo:* ${vehicle.make} ${vehicle.model} (${vehicle.year})\n`;
+    msg += `*Vehículo:* ${vehicle.make} ${vehicle.model} (${vehicle.year})\n`;
   }
   msg += `------------------------------------\n`;
-  msg += `*LISTA DE REPUESTOS:* \n`;
+  msg += `*LISTA DE REPUESTOS:*\n`;
   cart.forEach((item, idx) => {
-    msg += `${idx + 1}. [${item.quantity}x] *${item.name}*\n   • 🔢 Código / SKU: *${item.sku || "N/A"}* | OEM: ${item.oem} | ${formatRD(item.price * item.quantity)}\n`;
+    msg += `${idx + 1}. [${item.quantity}x] *${item.name}*\n   • Código / SKU: *${item.sku || "N/A"}* | OEM: ${item.oem} | ${formatRD(item.price * item.quantity)}\n`;
   });
   msg += `------------------------------------\n`;
-  msg += `💰 *TOTAL A PAGAR:* ${formatRD(subtotal)}\n`;
+  msg += `*TOTAL A PAGAR:* ${formatRD(subtotal)}\n`;
   msg +=
     deliveryOption === "delivery"
-      ? `⏱️ *Modalidad:* Envío a domicilio / Taller\n`
-      : `⏱️ *Modalidad:* Retiro en sucursal Santo Domingo\n`;
+      ? `*Modalidad:* Envío a domicilio / Taller\n`
+      : `*Modalidad:* Retiro en sucursal Santo Domingo\n`;
   msg += `Por favor confirmarme la disponibilidad para procesar la orden.`;
   return msg;
 }

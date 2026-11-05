@@ -72,35 +72,35 @@ export default function Catalog() {
           onClick={() => setMobileSidebarOpen(false)}
         />
 
-        {/* Filtro Vertical Innovador (Tema Azul Webdo + Efecto Growing Fade-In Naranja) */}
+        {/* Sidebar de Filtros Integrado al Estilo de la Página */}
         <aside
           className={`catalog-sidebar ${mobileSidebarOpen ? "mobile-open" : ""}`}
           id="catalogSidebar"
         >
-          <button
-            type="button"
-            className="sidebar-close-mobile"
-            onClick={() => setMobileSidebarOpen(false)}
-            aria-label="Cerrar filtros"
-          >
-            <i className="fa-solid fa-xmark" />
-          </button>
-
-          {/* Cabecera Innovadora "FILTROS" */}
-          <div className="sidebar-filter-crest">
-            <div className="sidebar-crest-pill">
-              <span className="crest-icon-box">
-                <i className="fa-solid fa-sliders" />
-              </span>
-              <span className="crest-title">FILTROS</span>
-            </div>
-            <span className="sidebar-crest-subtitle">TIPO DE REPUESTO</span>
-            <div className="sidebar-crest-divider">
-              <span className="divider-glow-dot" />
-            </div>
+          <div className="sidebar-filter-header">
+            <span className="sidebar-filter-title">
+              <i className="fa-solid fa-filter" /> Filtros
+            </span>
+            {filters.category !== "all" && (
+              <button
+                type="button"
+                className="sidebar-reset-link"
+                onClick={() => updateFilters({ category: "all" })}
+              >
+                Limpiar
+              </button>
+            )}
+            <button
+              type="button"
+              className="sidebar-close-mobile"
+              onClick={() => setMobileSidebarOpen(false)}
+              aria-label="Cerrar filtros"
+            >
+              <i className="fa-solid fa-xmark" />
+            </button>
           </div>
 
-          {/* Lista Vertical con Efecto Growing Fade-In Naranja */}
+          {/* Lista Vertical Alineada a la Izquierda con Efecto Growing Fade-In Naranja */}
           <nav className="sidebar-types-menu" aria-label="Filtros por tipo de repuesto">
             {CATEGORIES.map((cat) => {
               const isActive = filters.category === cat.slug;
@@ -119,29 +119,6 @@ export default function Catalog() {
               );
             })}
           </nav>
-
-          {/* Pie de Cápsula con Estado en Vivo y Botón de Reinicio */}
-          <div className="sidebar-filter-footer">
-            <div className="sidebar-live-status">
-              <span className="live-pulse-dot" />
-              <span>
-                <strong>{filteredProducts.length}</strong>{" "}
-                {filteredProducts.length === 1 ? "pieza" : "piezas"}
-              </span>
-            </div>
-            {(filters.category !== "all" || filters.stockOnly || activeVehicle) && (
-              <button
-                type="button"
-                className="sidebar-reset-btn"
-                onClick={() => {
-                  handleResetAll();
-                  setMobileSidebarOpen(false);
-                }}
-              >
-                <i className="fa-solid fa-rotate-left" /> Ver Todas
-              </button>
-            )}
-          </div>
         </aside>
 
         {/* Grid Principal de Catálogo */}
