@@ -181,6 +181,10 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
   if (catFilter !== "all") {
     if (catFilter === "Ofertas RD$") {
       list = list.filter((p) => p.isOffer || (p.oldPrice && p.oldPrice > p.price));
+    } else if (catFilter === "Cuerpo" || catFilter === "Enfriamiento") {
+      list = list.filter(
+        (p) => p.category === catFilter || p.category === "Cuerpo/Enfriamiento"
+      );
     } else {
       list = list.filter((p) => p.category === catFilter);
     }

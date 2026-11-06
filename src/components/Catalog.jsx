@@ -22,7 +22,6 @@ export default function Catalog() {
 
   const getTypeDisplayLabel = (slug) => {
     if (slug === "all") return "TODAS";
-    if (slug === "Cuerpo/Enfriamiento") return "ENFRIAMIENTO";
     if (slug === "Ofertas RD$") return "OFERTAS";
     return slug.toUpperCase();
   };

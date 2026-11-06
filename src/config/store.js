@@ -28,7 +28,8 @@ export const CATEGORIES = [
   { name: "Suspensión", slug: "Suspensión", icon: "fa-arrows-up-down" },
   { name: "Electricidad", slug: "Electricidad", icon: "fa-bolt" },
   { name: "Transmisión", slug: "Transmisión", icon: "fa-gear" },
-  { name: "Cuerpo/Enfriamiento", slug: "Cuerpo/Enfriamiento", icon: "fa-snowflake" },
+  { name: "Cuerpo", slug: "Cuerpo", icon: "fa-car-side" },
+  { name: "Enfriamiento", slug: "Enfriamiento", icon: "fa-snowflake" },
   { name: "Accesorios", slug: "Accesorios", icon: "fa-sliders" },
   { name: "Ofertas RD$", slug: "Ofertas RD$", icon: "fa-tag" },
 ];

@@ -21,7 +21,12 @@ export function filterProducts(products, filters, activeVehicle) {
     list =
       category === "Ofertas RD$"
         ? list.filter((p) => p.isOffer || (p.oldPrice && p.oldPrice > p.price))
-        : list.filter((p) => p.category === category);
+        : list.filter(
+            (p) =>
+              p.category === category ||
+              (p.category === "Cuerpo/Enfriamiento" &&
+                (category === "Cuerpo" || category === "Enfriamiento"))
+          );
   }
 
   const q = search.toLowerCase().trim();

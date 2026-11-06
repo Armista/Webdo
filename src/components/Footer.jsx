@@ -10,7 +10,8 @@ const FOOTER_CATEGORIES = [
   { label: "Amortiguadores y Tren Delantero", slug: "Suspensión" },
   { label: "Alternadores y Bobinas", slug: "Electricidad" },
   { label: "Kits de Embrague / Clutch", slug: "Transmisión" },
-  { label: "Radiadores y Enfriamiento", slug: "Cuerpo/Enfriamiento" },
+  { label: "Piezas de Cuerpo y Carrocería", slug: "Cuerpo" },
+  { label: "Radiadores y Enfriamiento", slug: "Enfriamiento" },
 ];
 
 export default function Footer() {
