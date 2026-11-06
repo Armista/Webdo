@@ -265,20 +265,12 @@ export default function Catalog() {
                           </button>
                           <button
                             type="button"
-                            className="btn btn-cotizar"
-                            onClick={() => openWhatsApp(buildQuoteMessage(prod, activeVehicle))}
-                            title="Cotizar por WhatsApp con Código de Almacén"
-                          >
-                            <i className="fa-brands fa-whatsapp" />
-                            <span>Cotizar</span>
-                          </button>
-                          <button
-                            type="button"
                             className="btn-quick-add"
                             onClick={() => addToCart(prod.id, 1)}
                             title="Agregar al carrito"
                           >
                             <i className="fa-solid fa-cart-shopping" />
+                            <span>Agregar al Carrito</span>
                           </button>
                         </div>
                       </div>

@@ -1479,7 +1479,7 @@ ul {
 
 .card-action-buttons {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.45fr);
   gap: 8px;
   align-items: center;
   justify-content: center;
@@ -1501,7 +1501,7 @@ ul {
   border: 1px solid var(--border-color);
   color: #ffffff;
   width: 100%;
-  height: 40px;
+  height: 42px;
   padding: 0 8px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -1525,7 +1525,7 @@ ul {
   border: 1px solid rgba(37, 211, 102, 0.45);
   color: #25d366;
   width: 100%;
-  height: 40px;
+  height: 42px;
   padding: 0 8px;
   font-size: 0.8rem;
   font-weight: 600;
@@ -1550,22 +1550,28 @@ ul {
 .btn-quick-add {
   background: var(--accent-color);
   color: #ffffff;
-  width: 40px;
-  height: 40px;
-  padding: 0;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
   margin: 0;
   border-radius: var(--radius-md);
-  font-size: 0.92rem;
+  font-size: 0.83rem;
+  font-weight: 700;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 7px;
   line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
   box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.28);
   transition: all var(--transition-fast);
 }
 .btn-quick-add:hover {
   background: var(--accent-hover);
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.42);
 }
 
 /* Estado Vacío */
