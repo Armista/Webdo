@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { CATEGORIES, formatRD, MAX_PRICE, openWhatsApp } from "../config/store";
+import { useLayoutEffect, useRef, useState } from "react";
+import { CATEGORIES, formatRD, MAX_PRICE } from "../config/store";
 import { useStore } from "../context/StoreContext";
-import { buildQuoteMessage, checkVehicleMatch } from "../utils/products";
+import { checkVehicleMatch } from "../utils/products";
 
 export default function Catalog() {
   const {
@@ -19,6 +19,35 @@ export default function Catalog() {
   } = useStore();
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [catalogMinHeight, setCatalogMinHeight] = useState(540);
+  const catalogMainRef = useRef(null);
+  const savedScrollYRef = useRef(null);
+
+  const applyFilterKeepScroll = (patch) => {
+    if (typeof window !== "undefined") {
+      savedScrollYRef.current = window.scrollY;
+    }
+    if (catalogMainRef.current) {
+      const currentH = catalogMainRef.current.offsetHeight;
+      if (currentH > catalogMinHeight) {
+        setCatalogMinHeight(currentH);
+      }
+    }
+    updateFilters(patch);
+  };
+
+  useLayoutEffect(() => {
+    if (catalogMainRef.current) {
+      const currentH = catalogMainRef.current.offsetHeight;
+      if (currentH > catalogMinHeight) {
+        setCatalogMinHeight(currentH);
+      }
+    }
+    if (savedScrollYRef.current !== null && typeof window !== "undefined") {
+      window.scrollTo({ top: savedScrollYRef.current, behavior: "instant" });
+      savedScrollYRef.current = null;
+    }
+  }, [filters, filteredProducts.length, catalogMinHeight]);
 
   const getTypeDisplayLabel = (slug) => {
     if (slug === "all") return "TODAS";
@@ -27,38 +56,34 @@ export default function Catalog() {
   };
 
   const handleResetAll = () => {
+    if (typeof window !== "undefined") {
+      savedScrollYRef.current = window.scrollY;
+    }
     setActiveVehicle(null);
     resetFilters();
   };
 
-  /* Chips de filtros activos */
+  /* Chips de filtros activos (sin chip redundante de categoría para no desplazar la altura) */
   const chips = [];
-  if (filters.category !== "all") {
-    chips.push({
-      key: "cat",
-      label: `Categoría: ${filters.category}`,
-      onRemove: () => updateFilters({ category: "all" }),
-    });
-  }
   if (filters.search.trim() !== "") {
     chips.push({
       key: "q",
       label: `Búsqueda: "${filters.search}"`,
-      onRemove: () => updateFilters({ search: "" }),
+      onRemove: () => applyFilterKeepScroll({ search: "" }),
     });
   }
   if (filters.maxPrice < MAX_PRICE) {
     chips.push({
       key: "price",
       label: `Hasta RD$ ${filters.maxPrice.toLocaleString()}`,
-      onRemove: () => updateFilters({ maxPrice: MAX_PRICE }),
+      onRemove: () => applyFilterKeepScroll({ maxPrice: MAX_PRICE }),
     });
   }
   if (filters.stockOnly) {
     chips.push({
       key: "stock",
       label: "Solo en Stock",
-      onRemove: () => updateFilters({ stockOnly: false }),
+      onRemove: () => applyFilterKeepScroll({ stockOnly: false }),
     });
   }
 
@@ -84,7 +109,7 @@ export default function Catalog() {
               <button
                 type="button"
                 className="sidebar-reset-link"
-                onClick={() => updateFilters({ category: "all" })}
+                onClick={() => applyFilterKeepScroll({ category: "all" })}
               >
                 Limpiar
               </button>
@@ -109,7 +134,7 @@ export default function Catalog() {
                   key={cat.slug}
                   className={`sidebar-type-item ${isActive ? "active" : ""}`}
                   onClick={() => {
-                    updateFilters({ category: cat.slug });
+                    applyFilterKeepScroll({ category: cat.slug });
                     setMobileSidebarOpen(false);
                   }}
                 >
@@ -121,7 +146,11 @@ export default function Catalog() {
         </aside>
 
         {/* Grid Principal de Catálogo */}
-        <section className="catalog-main">
+        <section
+          className="catalog-main"
+          ref={catalogMainRef}
+          style={{ minHeight: `${catalogMinHeight}px` }}
+        >
           <div className="catalog-toolbar">
             <div className="toolbar-left">
               <button
@@ -140,7 +169,7 @@ export default function Catalog() {
               <button
                 type="button"
                 className={`toolbar-stock-pill ${filters.stockOnly ? "active" : ""}`}
-                onClick={() => updateFilters({ stockOnly: !filters.stockOnly })}
+                onClick={() => applyFilterKeepScroll({ stockOnly: !filters.stockOnly })}
               >
                 <i
                   className={`fa-solid ${
@@ -156,7 +185,7 @@ export default function Catalog() {
                 id="sortSelect"
                 className="sort-select"
                 value={filters.sortBy}
-                onChange={(e) => updateFilters({ sortBy: e.target.value })}
+                onChange={(e) => applyFilterKeepScroll({ sortBy: e.target.value })}
               >
                 <option value="relevance">Relevancia</option>
                 <option value="price-asc">Precio: Menor a Mayor</option>
@@ -167,16 +196,18 @@ export default function Catalog() {
           </div>
 
           {/* Chips de filtros activos */}
-          <div className="active-filter-chips">
-            {chips.map((chip) => (
-              <span key={chip.key} className="filter-chip">
-                {chip.label}{" "}
-                <button type="button" onClick={chip.onRemove}>
-                  <i className="fa-solid fa-xmark" />
-                </button>
-              </span>
-            ))}
-          </div>
+          {chips.length > 0 && (
+            <div className="active-filter-chips">
+              {chips.map((chip) => (
+                <span key={chip.key} className="filter-chip">
+                  {chip.label}{" "}
+                  <button type="button" onClick={chip.onRemove}>
+                    <i className="fa-solid fa-xmark" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Grid de Tarjetas */}
           {filteredProducts.length > 0 ? (

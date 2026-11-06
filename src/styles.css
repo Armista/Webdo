@@ -896,6 +896,7 @@ ul {
    ========================================================================== */
 .catalog-section {
   padding: 40px 0 70px 0;
+  overflow-anchor: none;
 }
 
 .catalog-layout {
@@ -992,7 +993,7 @@ ul {
   width: 100%;
   background: transparent;
   border: none;
-  padding: 6px 2px;
+  padding: 7px 2px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1010,8 +1011,7 @@ ul {
     transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
     color 0.28s ease,
     opacity 0.28s ease,
-    letter-spacing 0.28s ease,
-    margin 0.28s ease;
+    letter-spacing 0.28s ease;
 }
 
 .sidebar-type-text {
@@ -1029,7 +1029,6 @@ ul {
   font-weight: 800;
   letter-spacing: 1.3px;
   transform: scale(1.22);
-  margin: 4px 0;
   animation: typeGrowFadeIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
@@ -1055,6 +1054,8 @@ ul {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 540px;
+  overflow-anchor: none;
 }
 
 .catalog-toolbar {
@@ -1580,13 +1581,15 @@ ul {
   border: 1px dashed var(--border-color);
   border-radius: var(--radius-lg);
   padding: 50px 24px;
+  min-height: 448px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   max-width: 600px;
-  margin: 30px auto;
+  margin: 0 auto;
 }
 
 .empty-icon {
