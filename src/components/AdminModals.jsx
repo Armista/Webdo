@@ -4,6 +4,18 @@ import { useStore } from "../context/StoreContext";
 import { isSupabaseEnabled } from "../lib/supabaseClient";
 import { formatCompatibility, parseCompatibility } from "../utils/products";
 
+/** Limpia el nombre de archivo de una imagen para usarlo como nombre del repuesto */
+function formatImageNameAsProductTitle(rawName = "") {
+  if (!rawName) return "";
+  const withoutExt = rawName
+    .replace(/\.(jpe?g|png|webp|gif|avif|svg|bmp)$/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!withoutExt) return "";
+  return withoutExt.charAt(0).toUpperCase() + withoutExt.slice(1);
+}
+
 /* ==========================================================================
    1. MODAL DE LOGIN DE ADMINISTRADOR
    ========================================================================== */
@@ -39,7 +51,6 @@ function AdminLoginModal() {
     <div
       className="modal-backdrop active"
       id="adminLoginModalBackdrop"
-      onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div className="modal-dialog admin-login-dialog" role="dialog" aria-modal="true">
         <button type="button" className="modal-close-btn" onClick={handleClose}>
@@ -271,7 +282,6 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
     <div
       className="modal-backdrop active"
       id="adminPanelModalBackdrop"
-      onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div className="modal-dialog admin-panel-dialog" role="dialog" aria-modal="true">
         <button type="button" className="modal-close-btn" onClick={handleClose}>
@@ -777,7 +787,7 @@ function AdminPanelModal({ onSelectGalleryImageForProduct }) {
                         type="button"
                         className="btn-use-img"
                         title="Usar esta imagen en el repuesto"
-                        onClick={() => onSelectGalleryImageForProduct(img.dataUrl)}
+                        onClick={() => onSelectGalleryImageForProduct(img)}
                       >
                         <i className="fa-solid fa-check" /> Usar
                       </button>
@@ -879,7 +889,9 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
       setCustomUrl(existingImg.startsWith("http") ? existingImg : "");
     } else {
       const initImg = productForm.initialImage || "";
-      setName("");
+      const initName = productForm.initialName || "";
+      const initFile = productForm.initialFileName || "";
+      setName(initName);
       setOem("");
       setSku(`WBD-${Math.floor(1000 + Math.random() * 9000)}`);
       setCategory("Motor");
@@ -889,14 +901,21 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
       setCompat("");
       setDesc("");
       setImage(initImg);
+      setUploadedFileName(initFile);
       setCustomUrl(initImg.startsWith("http") ? initImg : "");
     }
   }, [productForm, editingProd]);
 
   useEffect(() => {
     if (externalImage) {
-      setImage(externalImage);
-      setUploadedFileName("Seleccionada de la galería");
+      const imgUrl = typeof externalImage === "string" ? externalImage : externalImage.dataUrl || "";
+      const rawImgName = typeof externalImage === "object" ? externalImage.name || "" : "";
+      const cleanTitle = formatImageNameAsProductTitle(rawImgName);
+      setImage(imgUrl);
+      setUploadedFileName(rawImgName || "Seleccionada de la galería");
+      if (cleanTitle) {
+        setName(cleanTitle);
+      }
       clearExternalImage();
     }
   }, [externalImage, clearExternalImage]);
@@ -929,6 +948,10 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
       if (created[0]) {
         setImage(created[0].dataUrl);
         setUploadedFileName(file.name);
+        const cleanTitle = formatImageNameAsProductTitle(created[0].name || file.name);
+        if (cleanTitle && !name.trim()) {
+          setName(cleanTitle);
+        }
         showToast("¡Imagen cargada y lista!", "success");
       }
     } finally {
@@ -992,7 +1015,6 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
     <div
       className="modal-backdrop active"
       id="adminProductFormModalBackdrop"
-      onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div className="modal-dialog admin-form-dialog" role="dialog" aria-modal="true">
         <button type="button" className="modal-close-btn" onClick={handleClose}>
@@ -1360,7 +1382,16 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
                               onClick={() => {
                                 setImage(img.dataUrl);
                                 setUploadedFileName(img.name || "Imagen de galería");
-                                showToast("Imagen seleccionada de la galería", "success");
+                                const cleanTitle = formatImageNameAsProductTitle(img.name);
+                                if (cleanTitle) {
+                                  setName(cleanTitle);
+                                }
+                                showToast(
+                                  cleanTitle
+                                    ? `Imagen y nombre "${cleanTitle}" aplicados`
+                                    : "Imagen seleccionada de la galería",
+                                  "success"
+                                );
                               }}
                             >
                               <img
@@ -1413,10 +1444,7 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
           </div>
 
           <div className="admin-form-actions">
-            <button type="button" className="btn btn-outline-light" onClick={handleClose}>
-              Cancelar
-            </button>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary w-100">
               <i className="fa-solid fa-floppy-disk" /> Guardar Repuesto
             </button>
           </div>
@@ -1431,15 +1459,30 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
    ========================================================================== */
 export default function AdminModals() {
   const { productForm, setProductForm, showToast } = useStore();
-  const [selectedGalleryImage, setSelectedGalleryImage] = useState("");
+  const [selectedGalleryImage, setSelectedGalleryImage] = useState(null);
 
-  const handleUseGalleryImage = (dataUrl) => {
+  const handleUseGalleryImage = (imgObjOrUrl) => {
+    const dataUrl = typeof imgObjOrUrl === "string" ? imgObjOrUrl : imgObjOrUrl?.dataUrl || "";
+    const rawName = typeof imgObjOrUrl === "object" ? imgObjOrUrl?.name || "" : "";
+    const cleanTitle = formatImageNameAsProductTitle(rawName);
+
     if (productForm) {
-      setSelectedGalleryImage(dataUrl);
-      showToast("Imagen asignada al repuesto", "success");
+      setSelectedGalleryImage({ dataUrl, name: rawName });
+      showToast(
+        cleanTitle ? `Imagen y nombre "${cleanTitle}" asignados` : "Imagen asignada al repuesto",
+        "success"
+      );
     } else {
-      setProductForm({ productId: null, initialImage: dataUrl });
-      showToast("Imagen asignada al repuesto", "success");
+      setProductForm({
+        productId: null,
+        initialImage: dataUrl,
+        initialName: cleanTitle,
+        initialFileName: rawName,
+      });
+      showToast(
+        cleanTitle ? `Imagen y nombre "${cleanTitle}" asignados` : "Imagen asignada al repuesto",
+        "success"
+      );
     }
   };
 
@@ -1449,7 +1492,7 @@ export default function AdminModals() {
       <AdminPanelModal onSelectGalleryImageForProduct={handleUseGalleryImage} />
       <AdminProductFormModal
         externalImage={selectedGalleryImage}
-        clearExternalImage={() => setSelectedGalleryImage("")}
+        clearExternalImage={() => setSelectedGalleryImage(null)}
       />
     </>
   );
