@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { formatRD, openWhatsApp } from "../config/store";
+import { formatRD } from "../config/store";
 import { useStore } from "../context/StoreContext";
-import { buildQuoteMessage, checkVehicleMatch } from "../utils/products";
+import { checkVehicleMatch } from "../utils/products";
 
 export default function ProductModal() {
   const {
@@ -185,7 +185,9 @@ export default function ProductModal() {
                               k !== "Código Interno" &&
                               k !== "Código Interno / SKU" &&
                               k !== "Ubicación Almacén" &&
-                              k !== "Ubicación en Almacén"
+                              k !== "Ubicación en Almacén" &&
+                              k !== "Condición" &&
+                              k !== "Condicion"
                           )
                           .map(([k, v]) => (
                             <tr key={k}>
@@ -259,14 +261,6 @@ export default function ProductModal() {
                     style={{ flex: 1 }}
                   >
                     <i className="fa-solid fa-cart-shopping" /> Agregar al Carrito
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-whatsapp"
-                    onClick={() => openWhatsApp(buildQuoteMessage(prod, activeVehicle))}
-                    style={{ flex: 1.2 }}
-                  >
-                    <i className="fa-brands fa-whatsapp" /> Cotizar por WhatsApp
                   </button>
                 </div>
               </div>

@@ -999,7 +999,6 @@ function AdminProductFormModal({ externalImage, clearExternalImage }) {
           }
         : {
             "Código Interno / SKU": cleanSku,
-            Condición: "100% Nuevo",
           },
       crossReferences: editingProd ? editingProd.crossReferences : [cleanOem],
       compatibility: parsedCompat,
